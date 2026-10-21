@@ -1,0 +1,40 @@
+relationship 'Sales_Date_Calendar'
+	fromColumn: 'Sales'.'Date'
+	toColumn: 'Calendar'.'Date'
+
+relationship 'Sales_CustomerID_Customer'
+	fromColumn: 'Sales'.'CustomerID'
+	toColumn: 'Customer'.'CustomerID'
+
+relationship 'Sales_StockCode_Product'
+	fromColumn: 'Sales'.'StockCode'
+	toColumn: 'Product'.'StockCode'
+
+relationship 'Sales_Country_Geography'
+	fromColumn: 'Sales'.'Country'
+	toColumn: 'Geography'.'Country'
+
+relationship 'Sales_MonthsSinceFirst_Month Index'
+	fromColumn: 'Sales'.'MonthsSinceFirst'
+	toColumn: 'Month Index'.'MonthIndex'
+
+relationship 'Returns_Date_Calendar'
+	fromColumn: 'Returns'.'Date'
+	toColumn: 'Calendar'.'Date'
+
+relationship 'Returns_CustomerID_Customer'
+	fromColumn: 'Returns'.'CustomerID'
+	toColumn: 'Customer'.'CustomerID'
+
+relationship 'Returns_StockCode_Product'
+	fromColumn: 'Returns'.'StockCode'
+	toColumn: 'Product'.'StockCode'
+
+relationship 'Returns_Country_Geography'
+	fromColumn: 'Returns'.'Country'
+	toColumn: 'Geography'.'Country'
+
+relationship 'Customer_Segment_Segment'
+	fromColumn: 'Customer'.'Segment'
+	toColumn: 'Segment'.'Segment'
+

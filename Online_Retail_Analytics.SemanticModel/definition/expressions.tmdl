@@ -1,0 +1,4 @@
+/// Folder that holds the CSV files produced by ETL/etl.py
+expression DataFolder = "C:\Users\tomer\Downloads\Online_Retail_Analytics\Data\" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+	annotation PBI_ResultType = Text
+

@@ -1,0 +1,280 @@
+/// All report measures, organised in display folders
+table '_Measures'
+
+	/// Value of invoiced lines before cancellations
+	measure 'Gross Sales' = SUM(Sales[Revenue])
+		formatString: £#,0
+		displayFolder: 1 Sales
+
+	/// Value of cancelled invoice lines
+	measure 'Returns Value' = SUM(Returns[ReturnValue])
+		formatString: £#,0
+		displayFolder: 1 Sales
+
+	/// Gross sales minus cancellations: the headline revenue metric
+	measure 'Net Revenue' = [Gross Sales] - [Returns Value]
+		formatString: £#,0
+		displayFolder: 1 Sales
+
+	/// Number of distinct invoices
+	measure 'Orders' = DISTINCTCOUNT(Sales[Invoice])
+		formatString: #,0
+		displayFolder: 1 Sales
+
+	measure 'Units Sold' = SUM(Sales[Quantity])
+		formatString: #,0
+		displayFolder: 1 Sales
+
+	/// Identified customers with at least one order in the period
+	measure 'Active Customers' = CALCULATE(DISTINCTCOUNT(Sales[CustomerID]), Sales[CustomerID] > 0)
+		formatString: #,0
+		displayFolder: 1 Sales
+
+	/// Gross sales per invoice
+	measure 'Avg Order Value' = DIVIDE([Gross Sales], [Orders])
+		formatString: £#,0.00
+		displayFolder: 1 Sales
+
+	/// Cancellations as a share of gross sales
+	measure 'Return Rate' = DIVIDE([Returns Value], [Gross Sales])
+		formatString: 0.0%
+		displayFolder: 1 Sales
+
+	measure 'Products Sold' = DISTINCTCOUNT(Sales[StockCode])
+		formatString: #,0
+		displayFolder: 1 Sales
+
+	measure 'Avg Selling Price' = DIVIDE([Gross Sales], [Units Sold])
+		formatString: £#,0.00
+		displayFolder: 1 Sales
+
+	/// Net Revenue for the same dates one year earlier (capped at the last sale date)
+	measure 'Net Revenue PY' = VAR firstSale = CALCULATE(MIN(Sales[Date]), REMOVEFILTERS()) VAR lastSale = CALCULATE(MAX(Sales[Date]), REMOVEFILTERS()) VAR s0 = MIN('Calendar'[Date]) VAR e0 = MIN(MAX('Calendar'[Date]), lastSale) VAR s1 = EDATE(s0, -12) VAR e1 = EDATE(e0, -12) RETURN IF(s1 < firstSale || e0 < s0, BLANK(), CALCULATE([Net Revenue], REMOVEFILTERS('Calendar'), 'Calendar'[Date] >= s1, 'Calendar'[Date] <= e1))
+		formatString: £#,0
+		displayFolder: 2 Time intelligence
+
+	/// Orders for the same dates one year earlier (capped at the last sale date)
+	measure 'Orders PY' = VAR firstSale = CALCULATE(MIN(Sales[Date]), REMOVEFILTERS()) VAR lastSale = CALCULATE(MAX(Sales[Date]), REMOVEFILTERS()) VAR s0 = MIN('Calendar'[Date]) VAR e0 = MIN(MAX('Calendar'[Date]), lastSale) VAR s1 = EDATE(s0, -12) VAR e1 = EDATE(e0, -12) RETURN IF(s1 < firstSale || e0 < s0, BLANK(), CALCULATE([Orders], REMOVEFILTERS('Calendar'), 'Calendar'[Date] >= s1, 'Calendar'[Date] <= e1))
+		formatString: #,0
+		displayFolder: 2 Time intelligence
+
+	/// Active Customers for the same dates one year earlier (capped at the last sale date)
+	measure 'Active Customers PY' = VAR firstSale = CALCULATE(MIN(Sales[Date]), REMOVEFILTERS()) VAR lastSale = CALCULATE(MAX(Sales[Date]), REMOVEFILTERS()) VAR s0 = MIN('Calendar'[Date]) VAR e0 = MIN(MAX('Calendar'[Date]), lastSale) VAR s1 = EDATE(s0, -12) VAR e1 = EDATE(e0, -12) RETURN IF(s1 < firstSale || e0 < s0, BLANK(), CALCULATE([Active Customers], REMOVEFILTERS('Calendar'), 'Calendar'[Date] >= s1, 'Calendar'[Date] <= e1))
+		formatString: #,0
+		displayFolder: 2 Time intelligence
+
+	/// Avg Order Value for the same dates one year earlier (capped at the last sale date)
+	measure 'Avg Order Value PY' = VAR firstSale = CALCULATE(MIN(Sales[Date]), REMOVEFILTERS()) VAR lastSale = CALCULATE(MAX(Sales[Date]), REMOVEFILTERS()) VAR s0 = MIN('Calendar'[Date]) VAR e0 = MIN(MAX('Calendar'[Date]), lastSale) VAR s1 = EDATE(s0, -12) VAR e1 = EDATE(e0, -12) RETURN IF(s1 < firstSale || e0 < s0, BLANK(), CALCULATE([Avg Order Value], REMOVEFILTERS('Calendar'), 'Calendar'[Date] >= s1, 'Calendar'[Date] <= e1))
+		formatString: £#,0.00
+		displayFolder: 2 Time intelligence
+
+	/// Return Rate for the same dates one year earlier (capped at the last sale date)
+	measure 'Return Rate PY' = VAR firstSale = CALCULATE(MIN(Sales[Date]), REMOVEFILTERS()) VAR lastSale = CALCULATE(MAX(Sales[Date]), REMOVEFILTERS()) VAR s0 = MIN('Calendar'[Date]) VAR e0 = MIN(MAX('Calendar'[Date]), lastSale) VAR s1 = EDATE(s0, -12) VAR e1 = EDATE(e0, -12) RETURN IF(s1 < firstSale || e0 < s0, BLANK(), CALCULATE([Return Rate], REMOVEFILTERS('Calendar'), 'Calendar'[Date] >= s1, 'Calendar'[Date] <= e1))
+		formatString: 0.0%
+		displayFolder: 2 Time intelligence
+
+	measure 'Net Revenue YoY %' = VAR p = [Net Revenue PY] RETURN IF(ISBLANK(p), BLANK(), DIVIDE([Net Revenue] - p, p))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 2 Time intelligence
+
+	measure 'Net Revenue vs PY' = VAR v = [Net Revenue YoY %] RETURN IF(ISBLANK(v), "No prior-year comparison", IF(v > 0, "▲ ", IF(v < 0, "▼ ", "■ ")) & FORMAT(ABS(v), "0.0%") & " vs same period LY")
+		displayFolder: 3 KPI labels
+
+	measure 'Net Revenue vs PY Color' = IF(ISBLANK([Net Revenue YoY %]), "#8A94A6", IF([Net Revenue YoY %] >= 0, "#1D4ED8", "#C2410C"))
+		displayFolder: 3 KPI labels
+
+	measure 'Orders YoY %' = VAR p = [Orders PY] RETURN IF(ISBLANK(p), BLANK(), DIVIDE([Orders] - p, p))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 2 Time intelligence
+
+	measure 'Orders vs PY' = VAR v = [Orders YoY %] RETURN IF(ISBLANK(v), "No prior-year comparison", IF(v > 0, "▲ ", IF(v < 0, "▼ ", "■ ")) & FORMAT(ABS(v), "0.0%") & " vs same period LY")
+		displayFolder: 3 KPI labels
+
+	measure 'Orders vs PY Color' = IF(ISBLANK([Orders YoY %]), "#8A94A6", IF([Orders YoY %] >= 0, "#1D4ED8", "#C2410C"))
+		displayFolder: 3 KPI labels
+
+	measure 'Active Customers YoY %' = VAR p = [Active Customers PY] RETURN IF(ISBLANK(p), BLANK(), DIVIDE([Active Customers] - p, p))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 2 Time intelligence
+
+	measure 'Active Customers vs PY' = VAR v = [Active Customers YoY %] RETURN IF(ISBLANK(v), "No prior-year comparison", IF(v > 0, "▲ ", IF(v < 0, "▼ ", "■ ")) & FORMAT(ABS(v), "0.0%") & " vs same period LY")
+		displayFolder: 3 KPI labels
+
+	measure 'Active Customers vs PY Color' = IF(ISBLANK([Active Customers YoY %]), "#8A94A6", IF([Active Customers YoY %] >= 0, "#1D4ED8", "#C2410C"))
+		displayFolder: 3 KPI labels
+
+	measure 'Avg Order Value YoY %' = VAR p = [Avg Order Value PY] RETURN IF(ISBLANK(p), BLANK(), DIVIDE([Avg Order Value] - p, p))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 2 Time intelligence
+
+	measure 'Avg Order Value vs PY' = VAR v = [Avg Order Value YoY %] RETURN IF(ISBLANK(v), "No prior-year comparison", IF(v > 0, "▲ ", IF(v < 0, "▼ ", "■ ")) & FORMAT(ABS(v), "0.0%") & " vs same period LY")
+		displayFolder: 3 KPI labels
+
+	measure 'Avg Order Value vs PY Color' = IF(ISBLANK([Avg Order Value YoY %]), "#8A94A6", IF([Avg Order Value YoY %] >= 0, "#1D4ED8", "#C2410C"))
+		displayFolder: 3 KPI labels
+
+	measure 'Return Rate Δ pts' = IF(ISBLANK([Return Rate PY]), BLANK(), ([Return Rate] - [Return Rate PY]) * 100)
+		formatString: +0.00;-0.00;0.00
+		displayFolder: 2 Time intelligence
+
+	measure 'Return Rate vs PY' = VAR d = [Return Rate Δ pts] RETURN IF(ISBLANK([Return Rate PY]), "No prior-year comparison", IF(d > 0, "▲ ", IF(d < 0, "▼ ", "■ ")) & FORMAT(ABS(d), "0.00") & " pts vs same period LY")
+		displayFolder: 3 KPI labels
+
+	measure 'Return Rate vs PY Color' = IF(ISBLANK([Return Rate Δ pts]), "#8A94A6", IF([Return Rate Δ pts] <= 0, "#1D4ED8", "#C2410C"))
+		displayFolder: 3 KPI labels
+
+	measure 'International Net Revenue' = CALCULATE([Net Revenue], Geography[Market] = "International")
+		formatString: £#,0
+		displayFolder: 4 Visual helpers
+
+	measure 'Top 8 International' = VAR v = [International Net Revenue] RETURN IF(NOT ISBLANK(v) && RANKX(ALLSELECTED(Geography[Country]), [International Net Revenue], , DESC) <= 8, v)
+		formatString: £#,0
+		displayFolder: 4 Visual helpers
+
+	measure 'UK Share of Net Revenue' = DIVIDE(CALCULATE([Net Revenue], Geography[Market] = "United Kingdom", REMOVEFILTERS(Geography)), CALCULATE([Net Revenue], REMOVEFILTERS(Geography)))
+		formatString: 0.0%
+		displayFolder: 4 Visual helpers
+
+	/// Gross sales from customers in their first month
+	measure 'New customers' = CALCULATE([Gross Sales], Sales[MonthsSinceFirst] = 0)
+		formatString: £#,0
+		displayFolder: 4 Visual helpers
+
+	/// Gross sales from customers after their first month
+	measure 'Returning customers' = CALCULATE([Gross Sales], Sales[MonthsSinceFirst] > 0)
+		formatString: £#,0
+		displayFolder: 4 Visual helpers
+
+	/// Gross sales without a customer account
+	measure 'Guest checkouts' = CALCULATE([Gross Sales], Sales[CustomerID] = -1)
+		formatString: £#,0
+		displayFolder: 4 Visual helpers
+
+	measure 'Top 15 Products' = IF(RANKX(ALLSELECTED(Product[Product]), [Net Revenue], , DESC) <= 15, [Net Revenue])
+		formatString: £#,0
+		displayFolder: 4 Visual helpers
+
+	/// Return rate for products with at least £5K gross sales
+	measure 'Return Rate (min £5K sales)' = IF([Gross Sales] >= 5000, [Return Rate])
+		formatString: 0.0%
+		displayFolder: 4 Visual helpers
+
+	measure 'Share of Revenue (all-time)' = DIVIDE(SUM(Product[NetRevenueAllTime]), CALCULATE(SUM(Product[NetRevenueAllTime]), REMOVEFILTERS(Product)))
+		formatString: 0.0%
+		displayFolder: 4 Visual helpers
+
+	measure 'Cumulative Share (all-time)' = MAX(Product[CumulativeShare])
+		formatString: 0%
+		displayFolder: 4 Visual helpers
+
+	/// Number of products that make up 80% of all-time net revenue
+	measure 'Products driving 80% of revenue' = VAR a = CALCULATE(COUNTROWS(Product), Product[ABCClass] = "A", REMOVEFILTERS(Product)) VAR t = CALCULATE(COUNTROWS(Product), REMOVEFILTERS(Product)) RETURN FORMAT(a, "#,0") & " (" & FORMAT(DIVIDE(a, t), "0%") & ")"
+		displayFolder: 4 Visual helpers
+
+	/// Identified customers (guest checkouts excluded)
+	measure 'Customers' = CALCULATE(COUNTROWS(Customer), Customer[CustomerID] > 0)
+		formatString: #,0
+		displayFolder: 5 Customers
+
+	/// All-time net revenue of identified customers
+	measure 'Customer Net Revenue' = CALCULATE(SUM(Customer[Monetary]), Customer[CustomerID] > 0)
+		formatString: £#,0
+		displayFolder: 5 Customers
+
+	measure '% of Customers' = DIVIDE([Customers], CALCULATE([Customers], REMOVEFILTERS(Segment), REMOVEFILTERS(Customer[R], Customer[F], Customer[M], Customer[RFMScore])))
+		formatString: 0.0%
+		displayFolder: 5 Customers
+
+	measure '% of Revenue' = DIVIDE([Customer Net Revenue], CALCULATE([Customer Net Revenue], REMOVEFILTERS(Segment), REMOVEFILTERS(Customer[R], Customer[F], Customer[M], Customer[RFMScore])))
+		formatString: 0.0%
+		displayFolder: 5 Customers
+
+	/// Share of customers with two or more orders
+	measure 'Repeat Customer Rate' = DIVIDE(CALCULATE([Customers], Customer[Frequency] >= 2), [Customers])
+		formatString: 0.0%
+		displayFolder: 5 Customers
+
+	measure 'Avg Revenue per Customer' = DIVIDE([Customer Net Revenue], [Customers])
+		formatString: £#,0
+		displayFolder: 5 Customers
+
+	/// Share of revenue from the top 20% of customers by spend
+	measure 'Top 20% Revenue Share' = DIVIDE(CALCULATE([Customer Net Revenue], Customer[IsTop20Pct] = TRUE()), [Customer Net Revenue])
+		formatString: 0.0%
+		displayFolder: 5 Customers
+
+	measure 'Champions Revenue Share' = DIVIDE(CALCULATE([Customer Net Revenue], Segment[Segment] = "Champions"), CALCULATE([Customer Net Revenue], REMOVEFILTERS(Segment)))
+		formatString: 0.0%
+		displayFolder: 5 Customers
+
+	measure 'Avg Recency (days)' = CALCULATE(AVERAGE(Customer[RecencyDays]), Customer[CustomerID] > 0)
+		formatString: #,0
+		displayFolder: 5 Customers
+
+	measure 'Avg Orders' = CALCULATE(AVERAGE(Customer[Frequency]), Customer[CustomerID] > 0)
+		formatString: #,0.0
+		displayFolder: 5 Customers
+
+	measure 'Avg Spend' = CALCULATE(AVERAGE(Customer[Monetary]), Customer[CustomerID] > 0)
+		formatString: £#,0
+		displayFolder: 5 Customers
+
+	/// Customers whose first purchase was in the cohort month
+	measure 'Cohort Size' = CALCULATE([Active Customers], REMOVEFILTERS('Month Index'), 'Month Index'[MonthIndex] = 0, REMOVEFILTERS('Calendar'))
+		formatString: #,0
+		displayFolder: 6 Retention
+
+	/// Share of a cohort that ordered again k months after its first purchase (complete months only, M0-M12)
+	measure 'Retention %' = VAR k = SELECTEDVALUE('Month Index'[MonthIndex]) VAR c = MIN(Customer[CohortMonth]) VAR lastFull = EOMONTH(CALCULATE(MAX(Sales[Date]), REMOVEFILTERS()), -1) RETURN IF(ISBLANK(c) || ISBLANK(k) || k > 12 || EDATE(c, k) > lastFull, BLANK(), COALESCE(DIVIDE(CALCULATE([Active Customers], REMOVEFILTERS('Calendar')), [Cohort Size]), 0))
+		formatString: 0%
+		displayFolder: 6 Retention
+
+	/// Average of cohort retention rates for month k (cohorts with complete data only)
+	measure 'Avg Retention %' = VAR k = SELECTEDVALUE('Month Index'[MonthIndex]) VAR lastFull = EOMONTH(CALCULATE(MAX(Sales[Date]), REMOVEFILTERS()), -1) RETURN AVERAGEX(FILTER(VALUES(Customer[CohortMonth]), NOT ISBLANK(Customer[CohortMonth]) && EDATE(Customer[CohortMonth], k) <= lastFull), [Retention %])
+		formatString: 0.0%
+		displayFolder: 6 Retention
+
+	/// Average share of customers who buy again in month 1 after their first purchase
+	measure 'Month-1 Retention' = CALCULATE([Avg Retention %], 'Month Index'[MonthIndex] = 1)
+		formatString: 0.0%
+		displayFolder: 6 Retention
+
+	/// Average share of customers who buy again in month 3 after their first purchase
+	measure 'Month-3 Retention' = CALCULATE([Avg Retention %], 'Month Index'[MonthIndex] = 3)
+		formatString: 0.0%
+		displayFolder: 6 Retention
+
+	/// Average share of customers who buy again in month 6 after their first purchase
+	measure 'Month-6 Retention' = CALCULATE([Avg Retention %], 'Month Index'[MonthIndex] = 6)
+		formatString: 0.0%
+		displayFolder: 6 Retention
+
+	/// Average share of customers who buy again in month 12 after their first purchase
+	measure 'Month-12 Retention' = CALCULATE([Avg Retention %], 'Month Index'[MonthIndex] = 12)
+		formatString: 0.0%
+		displayFolder: 6 Retention
+
+	measure 'New buyers' = CALCULATE([Active Customers], 'Month Index'[MonthIndex] = 0)
+		formatString: #,0
+		displayFolder: 6 Retention
+
+	measure 'Returning buyers' = [Active Customers] - [New buyers]
+		formatString: #,0
+		displayFolder: 6 Retention
+
+	measure 'Title Trend' = VAR y = SELECTEDVALUE('Calendar'[Year]) VAR fy = YEAR(CALCULATE(MIN(Sales[Date]), REMOVEFILTERS())) RETURN IF(y - 1 <= fy, "Net revenue by month  ·  " & y & "  (no complete prior year)", "Net revenue by month  ·  " & y & " vs " & (y - 1))
+		displayFolder: 7 Titles
+
+	measure 'Title International' = "International markets  ·  UK = " & FORMAT([UK Share of Net Revenue], "0%") & " of net revenue"
+		displayFolder: 7 Titles
+
+	column Dummy
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Dummy
+
+	partition '_Measures' = m
+		mode: import
+		source = #table(type table [Dummy = text], {})
+

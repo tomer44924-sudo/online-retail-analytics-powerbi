@@ -1,0 +1,47 @@
+/// Cleaning steps applied by etl.py
+table 'Data Quality Log'
+
+	column 'Step'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Step
+
+	column 'Rule'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Rule
+
+	column 'Rows Before'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Rows Before
+
+	column 'Rows After'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Rows After
+
+	column 'Rows Removed'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: sum
+		sourceColumn: Rows Removed
+
+	column 'Note'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Note
+
+	partition 'Data Quality Log' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "etl_log.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Step", Int64.Type}, {"Rule", type text}, {"Rows Before", Int64.Type}, {"Rows After", Int64.Type}, {"Rows Removed", Int64.Type}, {"Note", type text}}, "en-US")
+				in
+				    Typed
+

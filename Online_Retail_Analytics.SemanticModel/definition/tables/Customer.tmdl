@@ -1,0 +1,121 @@
+/// Dimension: one row per customer with RFM scores as of 10 Dec 2011 (CustomerID -1 = guest checkout)
+table 'Customer'
+
+	column 'CustomerID'
+		dataType: int64
+		formatString: 0
+		isKey
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+	column 'Country'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Country
+
+	column 'Market'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Market
+
+	column 'FirstPurchase'
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		summarizeBy: none
+		sourceColumn: FirstPurchase
+
+	column 'LastPurchase'
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		summarizeBy: none
+		sourceColumn: LastPurchase
+
+	column 'CohortMonth'
+		dataType: dateTime
+		formatString: mmm yyyy
+		summarizeBy: none
+		sourceColumn: CohortMonth
+
+	column 'Cohort'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: CohortLabel
+		sortByColumn: 'CohortKey'
+
+	column 'CohortKey'
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: CohortKey
+
+	column 'RecencyDays'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: RecencyDays
+
+	column 'Frequency'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: Frequency
+
+	column 'Monetary'
+		dataType: double
+		formatString: £#,0
+		summarizeBy: none
+		sourceColumn: Monetary
+
+	column 'R'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: R
+
+	column 'F'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: F
+
+	column 'M'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: M
+
+	column 'RFMScore'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: RFMScore
+
+	column 'Segment'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Segment
+
+	column 'ValueRankPct'
+		dataType: double
+		formatString: 0.0%
+		isHidden
+		summarizeBy: none
+		sourceColumn: ValueRankPct
+
+	column 'IsTop20Pct'
+		dataType: boolean
+		isHidden
+		summarizeBy: none
+		sourceColumn: IsTop20Pct
+
+	partition 'Customer' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_customer.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"CustomerID", Int64.Type}, {"Country", type text}, {"Market", type text}, {"FirstPurchase", type date}, {"LastPurchase", type date}, {"CohortMonth", type date}, {"CohortLabel", type text}, {"CohortKey", Int64.Type}, {"RecencyDays", Int64.Type}, {"Frequency", Int64.Type}, {"Monetary", type number}, {"R", Int64.Type}, {"F", Int64.Type}, {"M", Int64.Type}, {"RFMScore", type text}, {"Segment", type text}, {"ValueRankPct", type number}, {"IsTop20Pct", type logical}}, "en-US")
+				in
+				    Typed
+

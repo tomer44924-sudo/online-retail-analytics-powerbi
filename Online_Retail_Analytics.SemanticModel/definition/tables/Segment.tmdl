@@ -1,0 +1,37 @@
+/// Dimension: RFM segment definitions and recommended actions
+table 'Segment'
+
+	column 'Segment'
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: Segment
+		sortByColumn: 'SegmentOrder'
+
+	column 'SegmentOrder'
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: SegmentOrder
+
+	column 'Definition'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Definition
+
+	column 'Recommended Action'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: RecommendedAction
+
+	partition 'Segment' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_segment.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Segment", type text}, {"SegmentOrder", Int64.Type}, {"Definition", type text}, {"RecommendedAction", type text}}, "en-US")
+				in
+				    Typed
+

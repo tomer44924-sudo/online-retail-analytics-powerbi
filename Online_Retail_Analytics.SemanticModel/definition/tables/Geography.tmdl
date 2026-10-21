@@ -1,0 +1,24 @@
+/// Dimension: country of the order
+table 'Geography'
+
+	column 'Country'
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: Country
+
+	column 'Market'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Market
+
+	partition 'Geography' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_country.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Country", type text}, {"Market", type text}}, "en-US")
+				in
+				    Typed
+

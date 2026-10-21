@@ -1,0 +1,75 @@
+/// Fact: one row per invoice line (cleaned sales, cancellations excluded)
+table 'Sales'
+
+	column 'Invoice'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Invoice
+
+	column 'Date'
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		summarizeBy: none
+		sourceColumn: Date
+
+	column 'Hour'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Hour
+
+	column 'CustomerID'
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+	column 'StockCode'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: StockCode
+
+	column 'Country'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Country
+
+	column 'Quantity'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+	column 'Price'
+		dataType: double
+		formatString: £#,0.00
+		summarizeBy: none
+		sourceColumn: Price
+
+	column 'Revenue'
+		dataType: double
+		formatString: £#,0.00
+		summarizeBy: sum
+		sourceColumn: Revenue
+
+	column 'MonthsSinceFirst'
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: MonthsSinceFirst
+
+	partition 'Sales' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(Binary.Decompress(File.Contents(DataFolder & "fact_sales.csv.gz"), Compression.GZip), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Invoice", Int64.Type}, {"Date", type date}, {"Hour", Int64.Type}, {"CustomerID", Int64.Type}, {"StockCode", type text}, {"Country", type text}, {"Quantity", Int64.Type}, {"Price", type number}, {"Revenue", type number}, {"MonthsSinceFirst", Int64.Type}}, "en-US")
+				in
+				    Typed
+

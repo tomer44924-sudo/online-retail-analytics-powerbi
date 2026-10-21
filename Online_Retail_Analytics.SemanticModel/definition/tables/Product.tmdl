@@ -1,0 +1,61 @@
+/// Dimension: products with all-time ABC (Pareto) class
+table 'Product'
+
+	column 'StockCode'
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: StockCode
+
+	column 'Description'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Description
+
+	column 'Product'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Label
+
+	column 'NetRevenueAllTime'
+		dataType: double
+		formatString: £#,0
+		isHidden
+		summarizeBy: none
+		sourceColumn: NetRevenueAllTime
+
+	column 'RevenueRank'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: RevenueRank
+
+	column 'CumulativeShare'
+		dataType: double
+		formatString: 0.0%
+		isHidden
+		summarizeBy: none
+		sourceColumn: CumulativeShare
+
+	column 'ABCClass'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ABCClass
+
+	column 'ProductPercentile'
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: ProductPercentile
+
+	partition 'Product' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "dim_product.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"StockCode", type text}, {"Description", type text}, {"Label", type text}, {"NetRevenueAllTime", type number}, {"RevenueRank", Int64.Type}, {"CumulativeShare", type number}, {"ABCClass", type text}, {"ProductPercentile", Int64.Type}}, "en-US")
+				in
+				    Typed
+

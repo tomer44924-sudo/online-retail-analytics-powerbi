@@ -1,0 +1,56 @@
+/// Fact: one row per cancelled invoice line
+table 'Returns'
+
+	column 'Invoice'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Invoice
+
+	column 'Date'
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		summarizeBy: none
+		sourceColumn: Date
+
+	column 'CustomerID'
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+	column 'StockCode'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: StockCode
+
+	column 'Country'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Country
+
+	column 'ReturnQty'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: sum
+		sourceColumn: ReturnQty
+
+	column 'ReturnValue'
+		dataType: double
+		formatString: £#,0.00
+		summarizeBy: sum
+		sourceColumn: ReturnValue
+
+	partition 'Returns' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "fact_returns.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Invoice", Int64.Type}, {"Date", type date}, {"CustomerID", Int64.Type}, {"StockCode", type text}, {"Country", type text}, {"ReturnQty", Int64.Type}, {"ReturnValue", type number}}, "en-US")
+				in
+				    Typed
+

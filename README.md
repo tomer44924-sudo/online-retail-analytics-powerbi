@@ -43,13 +43,11 @@ Online_Retail_Analytics.pbip            Power BI project (text format)
 Online_Retail_Analytics.Report/         report definition, theme and page backgrounds
 Online_Retail_Analytics.SemanticModel/  TMDL model: tables, relationships, DAX measures
 ETL/etl.py                              cleaning and feature-engineering script
-Data/                                   clean CSV files used by the model
 Screenshots/                            page images and PDF export
 ```
 
 ## How to open
 - **Quickest:** open `Online_Retail_Analytics.pbix` in Power BI Desktop. The data is already inside.
-- **Project version:** open `Online_Retail_Analytics.pbip`, go to *Transform data → Edit parameters*, set `DataFolder` to the full path of this repo's `Data\` folder (ending with `\`), then click *Refresh*.
-- **Re-run the ETL:** download *Online Retail II* from the UCI repository, load both sheets into one pandas DataFrame saved as a pickle, then run `python etl.py raw.pkl Data`.
+- **Project version:** the clean CSV files are not stored in this repo. Download *Online Retail II* from the UCI repository, load both sheets into one pandas DataFrame saved as a pickle, and run `python ETL/etl.py raw.pkl Data` to create the `Data\` folder. Then open `Online_Retail_Analytics.pbip`, go to *Transform data → Edit parameters*, set `DataFolder` to the full path of that `Data\` folder (ending with `\`), and click *Refresh*.
 
 Source: Chen, D. (2019). *Online Retail II*. UCI Machine Learning Repository.
